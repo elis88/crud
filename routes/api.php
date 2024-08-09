@@ -5,8 +5,16 @@ use App\User\Controllers\UserController;
 use App\Project\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('test', function(){
-    return 'yes';
+
+Route::group(['prefix' => '{tenant}', 'middleware' => 'tenant'], function () {
+
+    Route::middleware('auth:api')->group(function(){
+        Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
+        Route::post('projects', [ProjectController::class, 'store'])->name('projects.store');
+        Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+        Route::put('projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+        Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+    });
 });
 
 Route::middleware('auth:api')->group(function () {
@@ -14,12 +22,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::get('users/{user}', [UserController::class, 'show'])->name('users.show');
     Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
-
-    Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
-    Route::post('projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
-    Route::put('projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
-    Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
 
     // Routes that only admin can access
     Route::middleware(['role:admin'])->group(function () {

@@ -15,15 +15,13 @@ class TenantSeeder extends Seeder
     {
         $tenants = [
             [
-                'id' => Ulid::generate(),
                 'name' => 'Tenant 1',
-                'domain' => 'tenant1.example.com',
+                'prefix' => 'tenant1',
                 'database' => 'testing20',
             ],
             [
-                'id' => Ulid::generate(),
                 'name' => 'Tenant 2',
-                'domain' => 'tenant2.example.com',
+                'prefix' => 'tenant2',
                 'database' => 'testing21',
             ],
         ];
@@ -36,7 +34,7 @@ class TenantSeeder extends Seeder
             $admin = User::create([
                 'id' => Ulid::generate(),
                 'name' => 'Admin User',
-                'email' => 'admin@' . $tenantData['domain'],
+                'email' => 'admin@'.$tenantData['prefix'].'.com',
                 'password' => bcrypt('password'),
             ]);
             $admin->assignRole('admin');

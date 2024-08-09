@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Project\Services\ProjectService;
 use App\Project\Resources\ProjectResource;
 use App\Project\Validators\ProjectRequest;
-use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {

@@ -4,6 +4,7 @@ use App\Http\Middleware\CheckRoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use App\Http\Middleware\TenantMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,11 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         //
-
-        $middleware->append(App\Http\Middleware\TenantMiddleware::class);
-        $middleware->alias(['role' => CheckRoleMiddleware::class]);
-
-
+        $middleware->alias(['role' => CheckRoleMiddleware::class, 'tenant' => TenantMiddleware::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

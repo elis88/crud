@@ -8,6 +8,7 @@ use Spatie\Multitenancy\Models\Concerns\UsesLandlordConnection;
 use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
 use Spatie\Multitenancy\Models\Tenant as BaseTenant;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\Uid\Ulid;
 
 
 class Tenant extends BaseTenant
@@ -17,9 +18,19 @@ class Tenant extends BaseTenant
     protected $fillable = [
       'id',
       'name',
-      'domain',
+      'prefix',
       'database'
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->{$model->getKeyName()} = $model->{$model->getKeyName()} ?? Ulid::generate();
+        });
+    }
+
 
     public static function booted()
     {

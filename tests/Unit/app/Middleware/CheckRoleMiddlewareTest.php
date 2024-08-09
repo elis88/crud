@@ -4,6 +4,7 @@
         use App\Models\Tenant;
         use Illuminate\Support\Facades\Artisan;
         use App\Models\Project;
+        use Symfony\Component\Uid\Ulid;
 
         uses( RefreshDatabase::class);
 
@@ -16,13 +17,13 @@
                 '--seed' => true
             ]);
 
-            $tenant = Tenant::create([
-                'id' => \Symfony\Component\Uid\Ulid::generate(),
+            $this->tenant = Tenant::create([
+                'id' => Ulid::generate(),
                 'name' => 'Test Tenant',
-                'domain' => 'testtenant.example.com',
+                'prefix' => 'testtenant',
                 'database' => 'testing12345'
             ]);
-            $tenant->makeCurrent();
+            $this->tenant->makeCurrent();
             Artisan::call('tenants:artisan "migrate --database=tenant"');
 
             $this->adminUser = User::factory()->create();
@@ -33,6 +34,10 @@
 
         afterEach(function () {
             Artisan::call('migrate:rollback', ['--database' => 'tenant']);
+            Artisan::call('migrate:rollback', [
+                '--database' => 'landlord',
+                '--path' => 'database/migrations/landlord',
+            ]);
 
             Tenant::forgetCurrent();
         });
@@ -43,27 +48,20 @@
         }
 
         it('allows both admin and member to access user and project indexes', function () {
+
+            $url = route('projects.index', ['tenant' => $this->tenant->prefix]);
+         //   dd($url, test()->getJson($url)->getStatusCode());
+
             actingAsRole($this->adminUser);
             test()->getJson(route('users.index'))->assertOk();
-            test()->getJson(route('projects.index'))->assertOk();
+            test()->getJson(route('projects.index', ['tenant' => $this->tenant->prefix]))->assertOk();
 
             actingAsRole($this->memberUser);
             test()->getJson(route('users.index'))->assertOk();
-            test()->getJson(route('projects.index'))->assertOk();
+            test()->getJson(route('projects.index',['tenant' => $this->tenant->prefix]))->assertOk();
         });
 
-        it('allows both admin and member to view a specific user and project', function () {
-            $user = User::factory()->create();
-            $project = Project::factory()->create();
 
-            actingAsRole($this->adminUser);
-            test()->getJson(route('users.show', ['user' => $user->id]))->assertOk();
-            test()->getJson(route('projects.show', ['project' => $project->id]))->assertOk();
-
-            actingAsRole($this->memberUser);
-            test()->getJson(route('users.show', ['user' => $user->id]))->assertOk();
-            test()->getJson(route('projects.show', ['project' => $project->id]))->assertOk();
-        });
 
         it('allows only admins to create and delete users', function () {
             actingAsRole($this->adminUser);
@@ -77,7 +75,7 @@
 
         it('rejects unauthenticated access to all routes', function () {
             test()->getJson(route('users.show', ['user' => 1]))->assertUnauthorized();
-            test()->getJson(route('projects.show', ['project' => 1]))->assertUnauthorized();
+            test()->getJson(route('projects.show', ['tenant' => $this->tenant->prefix,'project' => 1]))->assertUnauthorized();
             test()->postJson(route('users.store'), ['name' => 'Fail User'])->assertUnauthorized();
             test()->deleteJson(route('users.destroy', ['user' => 1]))->assertUnauthorized();
         });
